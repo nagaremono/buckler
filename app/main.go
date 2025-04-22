@@ -37,10 +37,12 @@ func handle(c net.Conn) {
 	}
 
 	var res string
-	switch req.target {
-	case "/":
+	if req.target == "/" {
 		res = "HTTP/1.1 200 OK\r\n\r\n"
-	default:
+	} else if strings.HasPrefix(req.target, "/echo/") {
+		handleEcho(c, req)
+		return
+	} else {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
 	}
 
@@ -49,12 +51,6 @@ func handle(c net.Conn) {
 		fmt.Println(err)
 		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
 	}
-}
-
-type Request struct {
-	method   string
-	target   string
-	protocol string
 }
 
 func parseRequest(c net.Conn) (*Request, error) {
