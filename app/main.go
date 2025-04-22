@@ -13,9 +13,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	_, err = l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+
+		go handle(conn)
 	}
+}
+
+func handle(c net.Conn) {
+	fmt.Fprint(c, "HTTP/1.1 200 OK\r\n\r\n")
 }
