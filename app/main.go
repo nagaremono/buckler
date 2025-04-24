@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -8,6 +9,8 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
 		fmt.Println("Failed to bind to port 4221")
@@ -26,6 +29,8 @@ func main() {
 	}
 }
 
+var dirFlag = flag.String("directory", "", "")
+
 func handle(c net.Conn) {
 	req, err := parseRequest(c)
 	if err != nil {
@@ -42,6 +47,9 @@ func handle(c net.Conn) {
 		return
 	} else if strings.HasPrefix(req.target, "/user-agent") {
 		handleUserAgent(c, req)
+		return
+	} else if strings.HasPrefix(req.target, "/files") {
+		handleFiles(c, req)
 		return
 	} else {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
