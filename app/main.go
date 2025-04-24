@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -42,6 +41,9 @@ func handle(c net.Conn) {
 	} else if strings.HasPrefix(req.target, "/echo/") {
 		handleEcho(c, req)
 		return
+	} else if strings.HasPrefix(req.target, "/user-agent") {
+		handleUserAgent(c, req)
+		return
 	} else {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
 	}
@@ -68,16 +70,21 @@ func parseRequest(c net.Conn) (*Request, error) {
 		}
 	}
 
-	r := strings.Split(reqString, "\r\n")
-	if len(r) < 3 {
-		return nil, errors.New("invalid request")
-	}
+	requestLineStr, headerAndBody, _ := strings.Cut(reqString, "\r\n")
+	requestLine := strings.Split(requestLineStr, " ")
 
-	requestLine := strings.Split(r[0], " ")
+	headerStr, _, _ := strings.Cut(headerAndBody, "\r\n\r\n")
+	headers := map[string]string{}
+
+	for _, v := range strings.Split(headerStr, "\r\n") {
+		header := strings.Split(v, ": ")
+		headers[header[0]] = header[1]
+	}
 
 	return &Request{
 		method:   requestLine[0],
 		target:   requestLine[1],
 		protocol: requestLine[2],
+		headers:  headers,
 	}, nil
 }

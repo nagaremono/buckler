@@ -30,3 +30,23 @@ func handleEcho(c net.Conn, req *Request) {
 		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
 	}
 }
+
+func handleUserAgent(c net.Conn, req *Request) {
+	body := req.headers["User-Agent"]
+	res := &Response{
+		status:     200,
+		statusText: "OK",
+		protocol:   "HTTP/1.1",
+		headers: []string{
+			"Content-Type: text/plain",
+			"Content-Length: " + fmt.Sprintf("%d", len(body)),
+		},
+		body: []byte(body),
+	}
+
+	_, err := c.Write([]byte(res.String()))
+	if err != nil {
+		fmt.Println(err)
+		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+	}
+}

@@ -12,6 +12,7 @@ type Request struct {
 	method   string
 	target   string
 	protocol string
+	headers  map[string]string
 }
 
 type Response struct {
