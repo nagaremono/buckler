@@ -22,7 +22,6 @@ func main() {
 		}
 		go func() {
 			handle(conn)
-			conn.Close()
 		}()
 	}
 }
