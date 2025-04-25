@@ -27,3 +27,7 @@ func (r *Response) String() string {
 	s := fmt.Sprintf("%s %d %s\r\n%s\r\n\r\n%s\r\n\r\n", r.protocol, r.status, r.statusText, strings.Join(r.headers, "\r\n"), string(r.body))
 	return s
 }
+
+func (r *Response) Bytes() []byte {
+	return []byte(r.String())
+}

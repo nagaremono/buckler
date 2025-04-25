@@ -33,13 +33,22 @@ func handle(c net.Conn) {
 	req, err := parseRequest(c)
 	if err != nil {
 		fmt.Println(err)
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			status:     500,
+			statusText: "Internal Server Error",
+			protocol:   "HTTP/1.1",
+		}
+		c.Write(res.Bytes())
 		return
 	}
 
-	var res string
+	var res *Response
 	if req.target == "/" {
-		res = "HTTP/1.1 200 OK\r\n\r\n"
+		res = &Response{
+			status:     200,
+			statusText: "OK",
+			protocol:   "HTTP/1.1",
+		}
 	} else if strings.HasPrefix(req.target, "/echo/") {
 		handleEcho(c, req)
 		return
@@ -50,13 +59,22 @@ func handle(c net.Conn) {
 		handleFiles(c, req)
 		return
 	} else {
-		res = "HTTP/1.1 404 Not Found\r\n\r\n"
+		res = &Response{
+			status:     404,
+			statusText: "Not Found",
+			protocol:   "HTTP/1.1",
+		}
 	}
 
-	_, err = c.Write([]byte(res))
+	_, err = c.Write(res.Bytes())
 	if err != nil {
 		fmt.Println(err)
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			status:     500,
+			statusText: "Internal Server Error",
+			protocol:   "HTTP/1.1",
+		}
+		c.Write(res.Bytes())
 	}
 }
 

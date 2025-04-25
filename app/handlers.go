@@ -12,7 +12,12 @@ import (
 func handleEcho(c net.Conn, req *Request) {
 	arg, found := strings.CutPrefix(req.target, "/echo/")
 	if !found {
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
 		return
 	}
 	body := []byte(arg)
@@ -28,10 +33,15 @@ func handleEcho(c net.Conn, req *Request) {
 		body: body,
 	}
 
-	_, err := c.Write([]byte(res.String()))
+	_, err := c.Write(res.Bytes())
 	if err != nil {
 		fmt.Println(err)
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
 	}
 }
 
@@ -51,29 +61,54 @@ func handleUserAgent(c net.Conn, req *Request) {
 	_, err := c.Write([]byte(res.String()))
 	if err != nil {
 		fmt.Println(err)
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
 	}
 }
 
 func handleFiles(c net.Conn, req *Request) {
 	filename, found := strings.CutPrefix(req.target, "/files/")
 	if !found {
-		c.Write([]byte("HTTP/1.1 400 Not Found\r\n\r\n"))
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     404,
+			statusText: "Not Found",
+		}
+		c.Write(res.Bytes())
 		return
 	}
 	file, err := os.Open(path.Join(*dirFlag, filename))
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+			res := &Response{
+				protocol:   "HTTP/1.1",
+				status:     404,
+				statusText: "Not Found",
+			}
+			c.Write(res.Bytes())
 			return
 		}
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
 		return
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
 			fmt.Println(err)
-			c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+			res := &Response{
+				protocol:   "HTTP/1.1",
+				status:     500,
+				statusText: "Internal Server Error",
+			}
+			c.Write(res.Bytes())
 		}
 	}()
 
@@ -84,7 +119,13 @@ func handleFiles(c net.Conn, req *Request) {
 		nRead, err := file.Read(buf)
 		if err != nil && err != io.EOF {
 			fmt.Println(err)
-			c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+			res := &Response{
+				protocol:   "HTTP/1.1",
+				status:     500,
+				statusText: "Internal Server Error",
+			}
+			c.Write(res.Bytes())
+			return
 		}
 		if nRead == 0 {
 			break
@@ -106,6 +147,11 @@ func handleFiles(c net.Conn, req *Request) {
 	_, err = c.Write([]byte(res.String()))
 	if err != nil {
 		fmt.Println(err)
-		c.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
 	}
 }
