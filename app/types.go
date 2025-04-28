@@ -13,6 +13,7 @@ type Request struct {
 	target   string
 	protocol string
 	headers  map[string]string
+	body     []byte
 }
 
 type Response struct {

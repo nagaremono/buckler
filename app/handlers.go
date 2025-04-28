@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -81,6 +82,14 @@ func handleFiles(c net.Conn, req *Request) {
 		c.Write(res.Bytes())
 		return
 	}
+	if req.method == "GET" {
+		handleReadFile(filename, c)
+	} else if req.method == "POST" {
+		handleWriteFile(filename, req, c)
+	}
+}
+
+func handleReadFile(filename string, c net.Conn) {
 	file, err := os.Open(path.Join(*dirFlag, filename))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -142,6 +151,63 @@ func handleFiles(c net.Conn, req *Request) {
 			"Content-Length: " + fmt.Sprintf("%d", len(body)),
 		},
 		body: []byte(body),
+	}
+
+	_, err = c.Write([]byte(res.String()))
+	if err != nil {
+		fmt.Println(err)
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
+	}
+}
+
+func handleWriteFile(filename string, req *Request, c net.Conn) {
+	file, err := os.Create(path.Join(*dirFlag, filename))
+	if err != nil {
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
+		return
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Println(err)
+			res := &Response{
+				protocol:   "HTTP/1.1",
+				status:     500,
+				statusText: "Internal Server Error",
+			}
+			c.Write(res.Bytes())
+		}
+	}()
+
+	bodyLen, _ := strconv.Atoi(req.headers["Content-Length"])
+	_, err = file.Write(req.body[:bodyLen])
+	if err != nil {
+		fmt.Println(err)
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     500,
+			statusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
+		return
+	}
+
+	res := &Response{
+		status:     201,
+		statusText: "Created",
+		protocol:   "HTTP/1.1",
+		headers: []string{
+			"Content-Length: 0",
+		},
 	}
 
 	_, err = c.Write([]byte(res.String()))

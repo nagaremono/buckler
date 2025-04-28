@@ -96,7 +96,7 @@ func parseRequest(c net.Conn) (*Request, error) {
 	requestLineStr, headerAndBody, _ := strings.Cut(reqString, "\r\n")
 	requestLine := strings.Split(requestLineStr, " ")
 
-	headerStr, _, _ := strings.Cut(headerAndBody, "\r\n\r\n")
+	headerStr, body, _ := strings.Cut(headerAndBody, "\r\n\r\n")
 	headers := map[string]string{}
 
 	for _, v := range strings.Split(headerStr, "\r\n") {
@@ -109,5 +109,6 @@ func parseRequest(c net.Conn) (*Request, error) {
 		target:   requestLine[1],
 		protocol: requestLine[2],
 		headers:  headers,
+		body:     []byte(body),
 	}, nil
 }
