@@ -71,7 +71,7 @@ func handleUserAgent(c net.Conn, req *Request) {
 	}
 }
 
-func handleFiles(c net.Conn, req *Request) {
+func handleReadFile(c net.Conn, req *Request) {
 	filename, found := strings.CutPrefix(req.target, "/files/")
 	if !found {
 		res := &Response{
@@ -82,14 +82,6 @@ func handleFiles(c net.Conn, req *Request) {
 		c.Write(res.Bytes())
 		return
 	}
-	if req.method == "GET" {
-		handleReadFile(filename, c)
-	} else if req.method == "POST" {
-		handleWriteFile(filename, req, c)
-	}
-}
-
-func handleReadFile(filename string, c net.Conn) {
 	file, err := os.Open(path.Join(*dirFlag, filename))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -165,7 +157,17 @@ func handleReadFile(filename string, c net.Conn) {
 	}
 }
 
-func handleWriteFile(filename string, req *Request, c net.Conn) {
+func handleWriteFile(c net.Conn, req *Request) {
+	filename, found := strings.CutPrefix(req.target, "/files/")
+	if !found {
+		res := &Response{
+			protocol:   "HTTP/1.1",
+			status:     404,
+			statusText: "Not Found",
+		}
+		c.Write(res.Bytes())
+		return
+	}
 	file, err := os.Create(path.Join(*dirFlag, filename))
 	if err != nil {
 		res := &Response{

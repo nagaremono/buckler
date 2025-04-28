@@ -36,7 +36,8 @@ func initRouter() {
 	router = NewRouter()
 	router.register("GET", "/echo/:s", handleEcho)
 	router.register("GET", "/user-agent", handleUserAgent)
-	router.register("GET", "/files/:file", handleFiles)
+	router.register("GET", "/files/:file", handleReadFile)
+	router.register("POST", "/files/:file", handleWriteFile)
 }
 
 func handle(c net.Conn) {
