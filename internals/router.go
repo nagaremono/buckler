@@ -24,7 +24,7 @@ func NewRouter() *Router {
 	}
 }
 
-func (r *Router) register(method string, target string, handler Handler) {
+func (r *Router) Register(method string, target string, handler Handler) {
 	r.rHandlers = append(r.rHandlers, &RouteHandler{
 		target,
 		method,
@@ -32,28 +32,28 @@ func (r *Router) register(method string, target string, handler Handler) {
 	})
 }
 
-func (r *Router) match(req *Request, c net.Conn) {
+func (r *Router) Match(req *Request, c net.Conn) {
 	var handler Handler
 	for _, rh := range r.rHandlers {
-		if matcher(req, rh) {
+		if Matcher(req, rh) {
 			handler = rh.handler
 		}
 	}
 
 	if handler == nil {
 		res := &Response{
-			status:     404,
-			statusText: "Not Found",
-			protocol:   "HTTP/1.1",
+			Status:     404,
+			StatusText: "Not Found",
+			Protocol:   "HTTP/1.1",
 		}
 
 		_, err := c.Write(res.Bytes())
 		if err != nil {
 			fmt.Println(err)
 			res := &Response{
-				status:     500,
-				statusText: "Internal Server Error",
-				protocol:   "HTTP/1.1",
+				Status:     500,
+				StatusText: "Internal Server Error",
+				Protocol:   "HTTP/1.1",
 			}
 			c.Write(res.Bytes())
 		}
@@ -62,11 +62,11 @@ func (r *Router) match(req *Request, c net.Conn) {
 	handler(c, req)
 }
 
-func matcher(req *Request, rh *RouteHandler) bool {
-	if req.method != rh.method {
+func Matcher(req *Request, rh *RouteHandler) bool {
+	if req.Method != rh.method {
 		return false
 	}
-	targetParts := strings.Split(req.target, "/")
+	targetParts := strings.Split(req.Target, "/")
 	handlerParts := strings.Split(rh.target, "/")
 	for i := 0; i < len(targetParts); i++ {
 		if i >= len(handlerParts) {

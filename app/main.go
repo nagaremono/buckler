@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+
+	"github.com/nagaremono/buckler/internals"
 )
 
 func main() {
@@ -30,39 +32,39 @@ func main() {
 
 var dirFlag = flag.String("directory", "", "")
 
-var router *Router
+var router *internals.Router
 
 func initRouter() {
-	router = NewRouter()
-	router.register("GET", "/echo/:s", handleEcho)
-	router.register("GET", "/user-agent", handleUserAgent)
-	router.register("GET", "/files/:file", handleReadFile)
-	router.register("POST", "/files/:file", handleWriteFile)
+	router = internals.NewRouter()
+	router.Register("GET", "/echo/:s", handleEcho)
+	router.Register("GET", "/user-agent", handleUserAgent)
+	router.Register("GET", "/files/:file", handleReadFile)
+	router.Register("POST", "/files/:file", handleWriteFile)
 }
 
 func handle(c net.Conn) {
-	req, err := parseRequest(c)
+	req, err := internals.ParseRequest(c)
 	if err != nil {
 		fmt.Println(err)
-		res := &Response{
-			status:     500,
-			statusText: "Internal Server Error",
-			protocol:   "HTTP/1.1",
+		res := &internals.Response{
+			Status:     500,
+			StatusText: "Internal Server Error",
+			Protocol:   "HTTP/1.1",
 		}
 		c.Write(res.Bytes())
 		return
 	}
 
-	var res *Response
-	if req.target == "/" {
-		res = &Response{
-			status:     200,
-			statusText: "OK",
-			protocol:   "HTTP/1.1",
+	var res *internals.Response
+	if req.Target == "/" {
+		res = &internals.Response{
+			Status:     200,
+			StatusText: "OK",
+			Protocol:   "HTTP/1.1",
 		}
 		c.Write(res.Bytes())
 		return
 	}
 
-	router.match(req, c)
+	router.Match(req, c)
 }

@@ -6,23 +6,23 @@ import (
 )
 
 type Request struct {
-	method   string
-	target   string
-	protocol string
-	headers  map[string]string
-	body     []byte
+	Method   string
+	Target   string
+	Protocol string
+	Headers  map[string]string
+	Body     []byte
 }
 
 type Response struct {
-	status     int
-	statusText string
-	protocol   string
-	headers    []string
-	body       []byte
+	Status     int
+	StatusText string
+	Protocol   string
+	Headers    []string
+	Body       []byte
 }
 
 func (r *Response) String() string {
-	s := fmt.Sprintf("%s %d %s\r\n%s\r\n\r\n%s\r\n\r\n", r.protocol, r.status, r.statusText, strings.Join(r.headers, "\r\n"), string(r.body))
+	s := fmt.Sprintf("%s %d %s\r\n%s\r\n\r\n%s\r\n\r\n", r.Protocol, r.Status, r.StatusText, strings.Join(r.Headers, "\r\n"), string(r.Body))
 	return s
 }
 

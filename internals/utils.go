@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func parseRequest(c net.Conn) (*Request, error) {
+func ParseRequest(c net.Conn) (*Request, error) {
 	data := make([]byte, 512)
 	reqString := ""
 
@@ -32,10 +32,10 @@ func parseRequest(c net.Conn) (*Request, error) {
 	}
 
 	return &Request{
-		method:   requestLine[0],
-		target:   requestLine[1],
-		protocol: requestLine[2],
-		headers:  headers,
-		body:     []byte(body),
+		Method:   requestLine[0],
+		Target:   requestLine[1],
+		Protocol: requestLine[2],
+		Headers:  headers,
+		Body:     []byte(body),
 	}, nil
 }
