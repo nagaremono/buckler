@@ -32,7 +32,7 @@ func (r *Router) Register(method string, target string, handler Handler) {
 	})
 }
 
-func (r *Router) Match(req *Request, c net.Conn) {
+func (r *Router) Match(req *Request, c net.Conn) Handler {
 	var handler Handler
 	for _, rh := range r.rHandlers {
 		if Matcher(req, rh) {
@@ -56,10 +56,10 @@ func (r *Router) Match(req *Request, c net.Conn) {
 			res.Protocol = "HTTP/1.1"
 		}
 		c.Write(res.Bytes())
-		return
+		return nil
 	}
 
-	handler(c, req, res)
+	return handler
 }
 
 func Matcher(req *Request, rh *RouteHandler) bool {
