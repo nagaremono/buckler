@@ -22,6 +22,8 @@ func handleEcho(c net.Conn, req *internals.Request, res *internals.Response) {
 	}
 	body := []byte(arg)
 
+	fmt.Println(res.Headers)
+
 	res.Status = 200
 	res.StatusText = "OK"
 	res.Headers = append(res.Headers,
