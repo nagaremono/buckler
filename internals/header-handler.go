@@ -1,6 +1,8 @@
 package internals
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"net"
 	"slices"
@@ -22,5 +24,25 @@ func CompressionHandler(c net.Conn, r *Request, s *Response) {
 		}
 	}
 
-	s.Headers = append(s.Headers, fmt.Sprintf("Content-Encoding: %s", strings.Join(validHeaders, ",")))
+	if len(validHeaders) == 0 {
+		return
+	}
+
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+	_, err := zw.Write(s.Body)
+	if err != nil {
+		panic(err)
+	}
+	if err := zw.Close(); err != nil {
+		panic(err)
+	}
+
+	compressed := buf.Bytes()
+	s.Body = compressed
+	s.Headers = []string{
+		"Content-Type: text/plain",
+		fmt.Sprintf("Content-Length: %d", len(compressed)),
+		fmt.Sprintf("Content-Encoding: %s", strings.Join(validHeaders, ",")),
+	}
 }

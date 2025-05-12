@@ -17,12 +17,9 @@ func handleEcho(c net.Conn, req *internals.Request, res *internals.Response) {
 	if !found {
 		res.Status = 500
 		res.StatusText = "Internal Server Error"
-		c.Write(res.Bytes())
 		return
 	}
 	body := []byte(arg)
-
-	fmt.Println(res.Headers)
 
 	res.Status = 200
 	res.StatusText = "OK"
@@ -32,17 +29,6 @@ func handleEcho(c net.Conn, req *internals.Request, res *internals.Response) {
 			"Content-Length: " + fmt.Sprintf("%d", len(body)),
 		}...)
 	res.Body = body
-
-	_, err := c.Write(res.Bytes())
-	if err != nil {
-		fmt.Println(err)
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
-		c.Write(res.Bytes())
-	}
 }
 
 func handleUserAgent(c net.Conn, req *internals.Request, res *internals.Response) {
@@ -54,14 +40,6 @@ func handleUserAgent(c net.Conn, req *internals.Request, res *internals.Response
 		"Content-Length: " + fmt.Sprintf("%d", len(body)),
 	}
 	res.Body = []byte(body)
-
-	_, err := c.Write([]byte(res.String()))
-	if err != nil {
-		fmt.Println(err)
-		res.Status = 500
-		res.StatusText = "Internal Server Error"
-	}
-	c.Write(res.Bytes())
 }
 
 func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response) {
@@ -69,7 +47,6 @@ func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response)
 	if !found {
 		res.Status = 404
 		res.StatusText = "Not Found"
-		c.Write(res.Bytes())
 		return
 	}
 	file, err := os.Open(path.Join(*dirFlag, filename))
@@ -81,7 +58,6 @@ func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response)
 			res.Status = 500
 			res.StatusText = "Internal Server Error"
 		}
-		c.Write(res.Bytes())
 		return
 	}
 	defer func() {
@@ -89,7 +65,6 @@ func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response)
 			fmt.Println(err)
 			res.Status = 500
 			res.StatusText = "Internal Server Error"
-			c.Write(res.Bytes())
 		}
 	}()
 
@@ -100,12 +75,8 @@ func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response)
 		nRead, err := file.Read(buf)
 		if err != nil && err != io.EOF {
 			fmt.Println(err)
-			res := &internals.Response{
-				Protocol:   "HTTP/1.1",
-				Status:     500,
-				StatusText: "Internal Server Error",
-			}
-			c.Write(res.Bytes())
+			res.Status = 500
+			res.StatusText = "Internal Server Error"
 			return
 		}
 		if nRead == 0 {
@@ -121,14 +92,6 @@ func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response)
 		"Content-Length: " + fmt.Sprintf("%d", len(body)),
 	}...)
 	res.Body = []byte(body)
-
-	_, err = c.Write([]byte(res.String()))
-	if err != nil {
-		fmt.Println(err)
-		res.Status = 500
-		res.StatusText = "Internal Server Error"
-		c.Write(res.Bytes())
-	}
 }
 
 func handleWriteFile(c net.Conn, req *internals.Request, res *internals.Response) {
@@ -136,14 +99,12 @@ func handleWriteFile(c net.Conn, req *internals.Request, res *internals.Response
 	if !found {
 		res.Status = 404
 		res.StatusText = "Not Found"
-		c.Write(res.Bytes())
 		return
 	}
 	file, err := os.Create(path.Join(*dirFlag, filename))
 	if err != nil {
 		res.Status = 500
 		res.StatusText = "Internal Server Error"
-		c.Write(res.Bytes())
 		return
 	}
 	defer func() {
@@ -151,7 +112,6 @@ func handleWriteFile(c net.Conn, req *internals.Request, res *internals.Response
 			fmt.Println(err)
 			res.Status = 500
 			res.StatusText = "Internal Server Error"
-			c.Write(res.Bytes())
 		}
 	}()
 
@@ -161,19 +121,10 @@ func handleWriteFile(c net.Conn, req *internals.Request, res *internals.Response
 		fmt.Println(err)
 		res.Status = 500
 		res.StatusText = "Internal Server Error"
-		c.Write(res.Bytes())
 		return
 	}
 
 	res.Status = 201
 	res.StatusText = "Created"
 	res.Headers = append(res.Headers, "Content-Length: 0")
-
-	_, err = c.Write([]byte(res.String()))
-	if err != nil {
-		fmt.Println(err)
-		res.Status = 500
-		res.StatusText = "Internal Server Error"
-		c.Write(res.Bytes())
-	}
 }

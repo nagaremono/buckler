@@ -66,6 +66,16 @@ func handle(c net.Conn) {
 	}
 
 	handler := router.Match(req, c)
-	internals.CompressionHandler(c, req, res)
 	handler(c, req, res)
+	internals.CompressionHandler(c, req, res)
+	_, err = c.Write(res.Bytes())
+	if err != nil {
+		fmt.Println(err)
+		res := &internals.Response{
+			Protocol:   "HTTP/1.1",
+			Status:     500,
+			StatusText: "Internal Server Error",
+		}
+		c.Write(res.Bytes())
+	}
 }
