@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Handler func(c net.Conn, r *Request)
+type Handler func(c net.Conn, r *Request, s *Response)
 
 type RouteHandler struct {
 	target  string
@@ -40,26 +40,26 @@ func (r *Router) Match(req *Request, c net.Conn) {
 		}
 	}
 
+	res := &Response{
+		Protocol: "HTTP/1.1",
+	}
+
 	if handler == nil {
-		res := &Response{
-			Status:     404,
-			StatusText: "Not Found",
-			Protocol:   "HTTP/1.1",
-		}
+		res.Status = 404
+		res.StatusText = "Not Found"
 
 		_, err := c.Write(res.Bytes())
 		if err != nil {
 			fmt.Println(err)
-			res := &Response{
-				Status:     500,
-				StatusText: "Internal Server Error",
-				Protocol:   "HTTP/1.1",
-			}
-			c.Write(res.Bytes())
+			res.Status = 500
+			res.StatusText = "Internal Server Error"
+			res.Protocol = "HTTP/1.1"
 		}
+		c.Write(res.Bytes())
+		return
 	}
 
-	handler(c, req)
+	handler(c, req, res)
 }
 
 func Matcher(req *Request, rh *RouteHandler) bool {

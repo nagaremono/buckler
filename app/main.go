@@ -55,13 +55,12 @@ func handle(c net.Conn) {
 		return
 	}
 
-	var res *internals.Response
+	res := &internals.Response{
+		Protocol: "HTTP/1.1",
+	}
 	if req.Target == "/" {
-		res = &internals.Response{
-			Status:     200,
-			StatusText: "OK",
-			Protocol:   "HTTP/1.1",
-		}
+		res.Status = 200
+		res.StatusText = "OK"
 		c.Write(res.Bytes())
 		return
 	}

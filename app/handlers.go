@@ -12,29 +12,24 @@ import (
 	"github.com/nagaremono/buckler/internals"
 )
 
-func handleEcho(c net.Conn, req *internals.Request) {
+func handleEcho(c net.Conn, req *internals.Request, res *internals.Response) {
 	arg, found := strings.CutPrefix(req.Target, "/echo/")
 	if !found {
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
+		res.Status = 500
+		res.StatusText = "Internal Server Error"
 		c.Write(res.Bytes())
 		return
 	}
 	body := []byte(arg)
 
-	res := &internals.Response{
-		Status:     200,
-		StatusText: "OK",
-		Protocol:   "HTTP/1.1",
-		Headers: []string{
+	res.Status = 200
+	res.StatusText = "OK"
+	res.Headers = append(res.Headers,
+		[]string{
 			"Content-Type: text/plain",
 			"Content-Length: " + fmt.Sprintf("%d", len(body)),
-		},
-		Body: body,
-	}
+		}...)
+	res.Body = body
 
 	_, err := c.Write(res.Bytes())
 	if err != nil {
@@ -48,57 +43,41 @@ func handleEcho(c net.Conn, req *internals.Request) {
 	}
 }
 
-func handleUserAgent(c net.Conn, req *internals.Request) {
+func handleUserAgent(c net.Conn, req *internals.Request, res *internals.Response) {
 	body := req.Headers["User-Agent"]
-	res := &internals.Response{
-		Status:     200,
-		StatusText: "OK",
-		Protocol:   "HTTP/1.1",
-		Headers: []string{
-			"Content-Type: text/plain",
-			"Content-Length: " + fmt.Sprintf("%d", len(body)),
-		},
-		Body: []byte(body),
+	res.Status = 200
+	res.StatusText = "OK"
+	res.Headers = []string{
+		"Content-Type: text/plain",
+		"Content-Length: " + fmt.Sprintf("%d", len(body)),
 	}
+	res.Body = []byte(body)
 
 	_, err := c.Write([]byte(res.String()))
 	if err != nil {
 		fmt.Println(err)
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
-		c.Write(res.Bytes())
+		res.Status = 500
+		res.StatusText = "Internal Server Error"
 	}
+	c.Write(res.Bytes())
 }
 
-func handleReadFile(c net.Conn, req *internals.Request) {
+func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response) {
 	filename, found := strings.CutPrefix(req.Target, "/files/")
 	if !found {
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     404,
-			StatusText: "Not Found",
-		}
+		res.Status = 404
+		res.StatusText = "Not Found"
 		c.Write(res.Bytes())
 		return
 	}
 	file, err := os.Open(path.Join(*dirFlag, filename))
 	if err != nil {
 		if os.IsNotExist(err) {
-			res := &internals.Response{
-				Protocol:   "HTTP/1.1",
-				Status:     404,
-				StatusText: "Not Found",
-			}
-			c.Write(res.Bytes())
-			return
-		}
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
+			res.Status = 404
+			res.StatusText = "Not Found"
+		} else {
+			res.Status = 500
+			res.StatusText = "Internal Server Error"
 		}
 		c.Write(res.Bytes())
 		return
@@ -106,11 +85,8 @@ func handleReadFile(c net.Conn, req *internals.Request) {
 	defer func() {
 		if err := file.Close(); err != nil {
 			fmt.Println(err)
-			res := &internals.Response{
-				Protocol:   "HTTP/1.1",
-				Status:     500,
-				StatusText: "Internal Server Error",
-			}
+			res.Status = 500
+			res.StatusText = "Internal Server Error"
 			c.Write(res.Bytes())
 		}
 	}()
@@ -136,58 +112,43 @@ func handleReadFile(c net.Conn, req *internals.Request) {
 		body = append(body, buf[:nRead]...)
 	}
 
-	res := &internals.Response{
-		Status:     200,
-		StatusText: "OK",
-		Protocol:   "HTTP/1.1",
-		Headers: []string{
-			"Content-Type: application/octet-stream",
-			"Content-Length: " + fmt.Sprintf("%d", len(body)),
-		},
-		Body: []byte(body),
-	}
+	res.Status = 200
+	res.StatusText = "OK"
+	res.Headers = append(res.Headers, []string{
+		"Content-Type: application/octet-stream",
+		"Content-Length: " + fmt.Sprintf("%d", len(body)),
+	}...)
+	res.Body = []byte(body)
 
 	_, err = c.Write([]byte(res.String()))
 	if err != nil {
 		fmt.Println(err)
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
+		res.Status = 500
+		res.StatusText = "Internal Server Error"
 		c.Write(res.Bytes())
 	}
 }
 
-func handleWriteFile(c net.Conn, req *internals.Request) {
+func handleWriteFile(c net.Conn, req *internals.Request, res *internals.Response) {
 	filename, found := strings.CutPrefix(req.Target, "/files/")
 	if !found {
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     404,
-			StatusText: "Not Found",
-		}
+		res.Status = 404
+		res.StatusText = "Not Found"
 		c.Write(res.Bytes())
 		return
 	}
 	file, err := os.Create(path.Join(*dirFlag, filename))
 	if err != nil {
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
+		res.Status = 500
+		res.StatusText = "Internal Server Error"
 		c.Write(res.Bytes())
 		return
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
 			fmt.Println(err)
-			res := &internals.Response{
-				Protocol:   "HTTP/1.1",
-				Status:     500,
-				StatusText: "Internal Server Error",
-			}
+			res.Status = 500
+			res.StatusText = "Internal Server Error"
 			c.Write(res.Bytes())
 		}
 	}()
@@ -196,32 +157,21 @@ func handleWriteFile(c net.Conn, req *internals.Request) {
 	_, err = file.Write(req.Body[:bodyLen])
 	if err != nil {
 		fmt.Println(err)
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
+		res.Status = 500
+		res.StatusText = "Internal Server Error"
 		c.Write(res.Bytes())
 		return
 	}
 
-	res := &internals.Response{
-		Status:     201,
-		StatusText: "Created",
-		Protocol:   "HTTP/1.1",
-		Headers: []string{
-			"Content-Length: 0",
-		},
-	}
+	res.Status = 201
+	res.StatusText = "Created"
+	res.Headers = append(res.Headers, "Content-Length: 0")
 
 	_, err = c.Write([]byte(res.String()))
 	if err != nil {
 		fmt.Println(err)
-		res := &internals.Response{
-			Protocol:   "HTTP/1.1",
-			Status:     500,
-			StatusText: "Internal Server Error",
-		}
+		res.Status = 500
+		res.StatusText = "Internal Server Error"
 		c.Write(res.Bytes())
 	}
 }
