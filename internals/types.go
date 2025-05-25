@@ -22,7 +22,12 @@ type Response struct {
 }
 
 func (r *Response) String() string {
-	s := fmt.Sprintf("%s %d %s\r\n%s\r\n\r\n%s\r\n\r\n", r.Protocol, r.Status, r.StatusText, strings.Join(r.Headers, "\r\n"), string(r.Body))
+	headers := strings.Join(r.Headers, "\r\n")
+	body := string(r.Body)
+	s := fmt.Sprintf(
+		"%s %d %s\r\n%s\r\n\r\n%s\r\n\r\n",
+		r.Protocol, r.Status, r.StatusText, headers, body,
+	)
 	return s
 }
 
