@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"path"
 	"strconv"
@@ -12,7 +11,7 @@ import (
 	"github.com/nagaremono/buckler/internals"
 )
 
-func handleEcho(c net.Conn, req *internals.Request, res *internals.Response) {
+func handleEcho(req *internals.Request, res *internals.Response) {
 	arg, found := strings.CutPrefix(req.Target, "/echo/")
 	if !found {
 		res.Status = 500
@@ -31,7 +30,7 @@ func handleEcho(c net.Conn, req *internals.Request, res *internals.Response) {
 	res.Body = body
 }
 
-func handleUserAgent(c net.Conn, req *internals.Request, res *internals.Response) {
+func handleUserAgent(req *internals.Request, res *internals.Response) {
 	body := req.Headers["User-Agent"]
 	res.Status = 200
 	res.StatusText = "OK"
@@ -42,7 +41,7 @@ func handleUserAgent(c net.Conn, req *internals.Request, res *internals.Response
 	res.Body = []byte(body)
 }
 
-func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response) {
+func handleReadFile(req *internals.Request, res *internals.Response) {
 	filename, found := strings.CutPrefix(req.Target, "/files/")
 	if !found {
 		res.Status = 404
@@ -94,7 +93,7 @@ func handleReadFile(c net.Conn, req *internals.Request, res *internals.Response)
 	res.Body = []byte(body)
 }
 
-func handleWriteFile(c net.Conn, req *internals.Request, res *internals.Response) {
+func handleWriteFile(req *internals.Request, res *internals.Response) {
 	filename, found := strings.CutPrefix(req.Target, "/files/")
 	if !found {
 		res.Status = 404

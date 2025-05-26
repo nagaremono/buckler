@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Handler func(c net.Conn, r *Request, s *Response)
+type Handler func(r *Request, s *Response)
 
 type RouteHandler struct {
 	target  string

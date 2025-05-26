@@ -66,7 +66,7 @@ func handle(c net.Conn) {
 	}
 
 	handler := router.Match(req, c)
-	handler(c, req, res)
+	handler(req, res)
 	internals.CompressionHandler(c, req, res)
 	_, err = c.Write(res.Bytes())
 	if err != nil {
